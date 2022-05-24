@@ -95,6 +95,8 @@ def main() -> None:
         do_discover(args.config)
     elif args.properties:
         do_sync(config, args.properties, args.state)
+    elif args.config:
+        do_sync(config, args.config.to_dict(), args.state)
 
 
 if __name__ == '__main__':
