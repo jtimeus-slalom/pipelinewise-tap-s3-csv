@@ -5,6 +5,7 @@ Tap S3 csv main script
 import sys
 import ujson
 import singer
+import ast
 
 from typing import Dict
 from singer import metadata, get_logger
@@ -84,8 +85,13 @@ def main() -> None:
     LOGGER.info(type(config.get('tables',{})))
     LOGGER.info(config.get('tables',{}))
 
+    #convert the config tables to a list
+    configlist = ast.literal_eval(config.get('tables',{}))
+   
+    LOGGER.info(type(configlist))
+    LOGGER.info(configlist)
     # Reassign the config tables to the validated object
-    config['tables'] = CONFIG_CONTRACT(list(config.get('tables', {})))
+    config['tables'] = CONFIG_CONTRACT(configlist)
     
     try:
         for _ in s3.list_files_in_bucket(config['bucket']):
