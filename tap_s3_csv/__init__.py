@@ -81,12 +81,11 @@ def main() -> None:
     args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
     config = args.config
 
-    LOGGER.info(config)
     LOGGER.info(type(config.get('tables',{})))
     LOGGER.info(config.get('tables',{}))
 
     # Reassign the config tables to the validated object
-    config['tables'] = CONFIG_CONTRACT(config.get('tables', {}))
+    config['tables'] = CONFIG_CONTRACT(list(config.get('tables', {})))
     
     try:
         for _ in s3.list_files_in_bucket(config['bucket']):
