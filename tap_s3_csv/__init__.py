@@ -82,14 +82,9 @@ def main() -> None:
     args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
     config = args.config
 
-    LOGGER.info(type(config.get('tables',{})))
-    LOGGER.info(config.get('tables',{}))
-
     #convert the config tables to a list
     configlist = ast.literal_eval(config.get('tables',{}))
    
-    LOGGER.info(type(configlist))
-    LOGGER.info(configlist)
     # Reassign the config tables to the validated object
     config['tables'] = CONFIG_CONTRACT(configlist)
     
