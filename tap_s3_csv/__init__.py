@@ -5,6 +5,7 @@ Tap S3 csv main script
 import sys
 import ujson
 import singer
+import ast
 
 from typing import Dict
 from singer import metadata, get_logger
@@ -81,9 +82,12 @@ def main() -> None:
     args = singer.utils.parse_args(REQUIRED_CONFIG_KEYS)
     config = args.config
 
+    #convert the config tables to a list
+    configlist = ast.literal_eval(config.get('tables',{}))
+   
     # Reassign the config tables to the validated object
-    config['tables'] = CONFIG_CONTRACT(config.get('tables', {}))
-
+    config['tables'] = CONFIG_CONTRACT(configlist)
+    
     try:
         for _ in s3.list_files_in_bucket(config['bucket']):
             break
@@ -95,6 +99,8 @@ def main() -> None:
         do_discover(args.config)
     elif args.properties:
         do_sync(config, args.properties, args.state)
+    elif args.catalog:
+        do_sync(config, args.catalog.to_dict(), args.state)
 
 
 if __name__ == '__main__':
