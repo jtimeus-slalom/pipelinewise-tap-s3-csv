@@ -27,7 +27,11 @@ def do_discover(config: Dict) -> None:
     :return: nothing
     """
     LOGGER.info("Starting discover")
-    streams = discover_streams(config)
+    try:
+        streams = discover_streams(config)
+    except ValueError:
+        LOGGER.warning("Failed Discovery")
+        return
     if not streams:
         raise Exception("No streams found")
     catalog = {"streams": streams}
@@ -83,7 +87,11 @@ def main() -> None:
     config = args.config
 
     #convert the config tables to a list
-    configlist = ast.literal_eval(config.get('tables',{}))
+    if isinstance(config.get('tables',{}),list):
+        LOGGER.info(type(config.get('tables',{})))
+        configlist = config.get('tables',{})
+    else:
+        configlist = ast.literal_eval(config.get('tables',{}))
    
     # Reassign the config tables to the validated object
     config['tables'] = CONFIG_CONTRACT(configlist)

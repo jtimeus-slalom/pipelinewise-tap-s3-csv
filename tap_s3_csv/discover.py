@@ -3,9 +3,11 @@ Discovery mode is connecting to the data source and collecting information that 
 """
 from typing import List, Dict
 
+from singer import get_logger
 from singer import metadata
 from tap_s3_csv import s3
 
+LOGGER = get_logger('tap_s3_csv')
 
 def discover_streams(config: Dict)-> List[Dict]:
     """
@@ -16,7 +18,11 @@ def discover_streams(config: Dict)-> List[Dict]:
     streams = []
 
     for table_spec in config['tables']:
-        schema = discover_schema(config, table_spec)
+        try:
+            schema = discover_schema(config, table_spec)
+        except ValueError as err:
+            LOGGER.warning(f"Error during Discovery: {err}")
+            continue
         streams.append({'stream': table_spec['table_name'],
                         'tap_stream_id': table_spec['table_name'],
                         'schema': schema,
