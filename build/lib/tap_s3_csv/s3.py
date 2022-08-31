@@ -59,7 +59,6 @@ def setup_aws_client(config: Dict) -> None:
     aws_session_token = config.get('aws_session_token') or os.environ.get('AWS_SESSION_TOKEN')
     aws_profile = config.get('aws_profile') or os.environ.get('AWS_PROFILE')
     aws_role_arn = config.get('aws_role_arn') or os.environ.get('AWS_ROLE_ARN')
-    aws_external_id = config.get('aws_external_id') or os.environ.get('AWS_EXTERNAL_ID')
     # AWS credentials based authentication
     if aws_access_key_id and aws_secret_access_key:
         boto3.setup_default_session(
@@ -73,9 +72,9 @@ def setup_aws_client(config: Dict) -> None:
 
     # Assume Role if desired
     if aws_role_arn:
-        assume_role(aws_role_arn, aws_external_id)
+        assume_role(aws_role_arn)
 
-def assume_role(aws_role_arn: str, aws_external_id: str) -> None:
+def assume_role(aws_role_arn: str) -> None:
     """
     Assume and IAM role if a IAM Role ARN is available
     The IAM User that the tap will use must have permission to assume the Role. 
@@ -88,9 +87,9 @@ def assume_role(aws_role_arn: str, aws_external_id: str) -> None:
             RoleArn=aws_role_arn,
             RoleSessionName = "TestSession",
             DurationSeconds= 3600,
-            ExternalId = aws_external_id
+            ExternalId = "DataPlatform-TapPeoplevault"
     )
-    
+    LOGGER.info(assumed_role_dict) 
     credentials = assumed_role_dict['Credentials']
 
     temp_access_key_id = credentials['AccessKeyId']
