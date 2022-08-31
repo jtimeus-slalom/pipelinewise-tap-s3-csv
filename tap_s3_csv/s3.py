@@ -72,8 +72,13 @@ def setup_aws_client(config: Dict) -> None:
         boto3.setup_default_session(profile_name=aws_profile)
 
     # Assume Role if desired
-    if aws_role_arn:
+    if aws_role_arn and aws_external_id:
         assume_role(aws_role_arn, aws_external_id)
+    elif aws_role_arn and not aws_external_id:
+        raise ValueError("If aws_role_arn is defined in configuration, aws_external_id must also be defined.")
+    
+    
+
 
 def assume_role(aws_role_arn: str, aws_external_id: str) -> None:
     """
