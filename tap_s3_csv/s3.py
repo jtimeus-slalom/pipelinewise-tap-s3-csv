@@ -58,7 +58,8 @@ def setup_aws_client(config: Dict) -> None:
     aws_secret_access_key = config.get('aws_secret_access_key') or os.environ.get('AWS_SECRET_ACCESS_KEY')
     aws_session_token = config.get('aws_session_token') or os.environ.get('AWS_SESSION_TOKEN')
     aws_profile = config.get('aws_profile') or os.environ.get('AWS_PROFILE')
-
+    aws_role_arn = config.get('aws_role_arn') or os.environ.get('AWS_ROLE_ARN')
+    aws_external_id = config.get('aws_external_id') or os.environ.get('AWS_EXTERNAL_ID')
     # AWS credentials based authentication
     if aws_access_key_id and aws_secret_access_key:
         boto3.setup_default_session(
@@ -69,6 +70,44 @@ def setup_aws_client(config: Dict) -> None:
     # AWS Profile based authentication
     else:
         boto3.setup_default_session(profile_name=aws_profile)
+
+    # Assume Role if desired
+    if aws_role_arn and aws_external_id:
+        assume_role(aws_role_arn, aws_external_id)
+    elif aws_role_arn and not aws_external_id:
+        raise ValueError("If aws_role_arn is defined in configuration, aws_external_id must also be defined.")
+    
+    
+
+
+def assume_role(aws_role_arn: str, aws_external_id: str) -> None:
+    """
+    Assume and IAM role if a IAM Role ARN is available
+    The IAM User that the tap will use must have permission to assume the Role. 
+    :param aws_role_arn: The ARN of the AWS IAM Role that you wish to assume
+
+    """
+    LOGGER.info("Attempting to Assume Role")
+    sts_client = boto3.client('sts')
+    assumed_role_dict = sts_client.assume_role(
+            RoleArn=aws_role_arn,
+            RoleSessionName = "TestSession",
+            DurationSeconds= 3600,
+            ExternalId = aws_external_id
+    )
+    
+    credentials = assumed_role_dict['Credentials']
+
+    temp_access_key_id = credentials['AccessKeyId']
+    temp_secret_access_key = credentials['SecretAccessKey']
+    temp_session_token = credentials['SessionToken']
+
+    boto3.setup_default_session(
+            aws_access_key_id = temp_access_key_id,
+            aws_secret_access_key = temp_secret_access_key,
+            aws_session_token = temp_session_token
+            
+    )
 
 
 def get_sampled_schema_for_table(config: Dict, table_spec: Dict) -> Dict:
